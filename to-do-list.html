@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="to-do-design.css">
+
+</head>
+<body>
+    <h1>WHAT TO-DO</h1>
+
+    <div class="add-task">
+        <form id="task-form">
+            <input type="text" id="taskName" placeholder="Enter your task..." required><br>
+            <hr>
+            <input type="date" id="taskDueDate" required>
+            <input type="time" id="taskDueTime" required>
+            <select id="taskPriority" required>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+            </select>
+            <button id="addForm" type="submit">></button>
+        </form>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="task-list">
+        <div id="sort">
+            Sort by: <br>
+            <button>Date Added</button>
+            <button>Due Date</button>
+            <button>Priority</button>
+        </div>
+        <div id="indv-tasks">
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
+            authDomain: "what-to-do-2fcc7.firebaseapp.com",
+            databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "what-to-do-2fcc7",
+            storageBucket: "what-to-do-2fcc7.firebasestorage.app",
+            messagingSenderId: "982422793450",
+            appId: "1:982422793450:web:9339738576ddf5837ebb93"
+        };
+
+        const app = initializeApp(firebaseConfig);
+
+        import {getDatabase, ref, child, get, set, update, remove, push, onChildAdded} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+        const db = getDatabase();
+
+        let taskName = document.getElementById('taskName');
+        let taskDueDate = document.getElementById('taskDueDate');
+        let taskDueTime = document.getElementById('taskDueTime');
+        let taskPriority = document.getElementById('taskPriority');
+        let indvTasks = document.getElementById('indv-tasks');
+
+        function addData(){
+            const taskRef = push(ref(db, "tasks"));
+            set(taskRef, {
+                name: taskName.value,
+                dueDate: taskDueDate.value,
+                dueTime: taskDueTime.value,
+                priority: taskPriority.value,
+                isDone: false,
+                addedOn: new Date().toLocaleString()
+            })
+            .then(()=>{
+                alert("Data added successfully.");
+                document.getElementById('task-form').reset();
+            })
+            .catch((error)=>{
+                alert("Error.");
+                console.log(error);
+            })
+        }
+
+        const tasksRef = ref(db, 'tasks');
+
+        onChildAdded(tasksRef, (snapshot) => {
+            const task = snapshot.val();
+            const taskID = snapshot.key;
+
+            let taskDiv = document.createElement('div');
+            taskDiv.classList.add("card", "p-2", "mb-2");
+
+            taskDiv.innerHTML = `
+                <div class="task-info">
+                    <input type="checkbox" class="form-check-input complete-checkbox" data-id="${taskID}" ${task.isDone ? 'checked' : ''}>
+                    <h5>${task.name}</h5>
+                    <p>Due: ${task.dueDate} ${task.dueTime}</p>
+                    <p>Priority: ${task.priority}</p>
+                </div>
+                <div class="task-actions">
+                    <button class="edit-btn" data-id="${taskID}">Edit</button>
+                    <button class="delete-btn">Delete</button>
+                </div>
+            `;
+
+            taskDiv.querySelector(".delete-btn").addEventListener('click', () => {
+                remove(ref(db, "tasks/" + taskID)).then(() => taskDiv.remove());
+            });
+
+            taskDiv.querySelector(".edit-btn").addEventListener('click', () => {
+                const infoDiv = taskDiv.querySelector('.task-info');
+                const actionsDiv = taskDiv.querySelector('.task-actions');
+
+                infoDiv.innerHTML = `
+                    <input type="text" value="${task.name}">
+                    <input type="date" value="${task.dueDate}">
+                    <input type="time" value="${task.dueTime}">
+                    <select>
+                        <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low</option>
+                        <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                        <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
+                    </select>
+                `;
+
+                actionsDiv.innerHTML = `
+                    <button class="save-btn">Save</button>
+                    <button class="cancel-btn">Cancel</button>
+                `;
+
+                actionsDiv.querySelector(".save-btn").addEventListener('click', () => {
+                    const updatedTask = {
+                        name: infoDiv.querySelector('input[type="text"]').value,
+                        dueDate: infoDiv.querySelector('input[type="date"]').value,
+                        dueTime: infoDiv.querySelector('input[type="time"]').value,
+                        priority: infoDiv.querySelector('select').value
+                    };
+
+                    update(ref(db, "tasks/" + taskID), updatedTask);
+                    window.location.reload();
+                });
+
+                actionsDiv.querySelector(".cancel-btn").addEventListener('click', () => {
+                    window.location.reload();
+                });
+
+                return taskDiv;
+            })
+
+            indvTasks.appendChild(taskDiv);
+        })
+        
+
+        document.getElementById('task-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            addData();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+    <script src="to-do.js"></script>
+</body>
+</html>

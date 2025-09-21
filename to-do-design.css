@@ -1,0 +1,25 @@
+.task-list{
+    background-color: #F2F2F2;
+}
+
+#task-form input, select{
+    margin-top: 5px;
+    border: none;
+}
+
+#sort{
+    align-self: right;
+}
+
+#sort button {
+    background-color: white;
+    border: none;
+}
+
+.card .edit-btn, .delete-btn{
+    display: none;
+}
+
+.card:hover .edit-btn, .card:hover .delete-btn{
+    display: inline;
+}
