@@ -23,3 +23,8 @@
 .card:hover .edit-btn, .card:hover .delete-btn{
     display: inline;
 }
+
+.completed {
+    text-decoration: line-through;
+    color: gray;
+}
