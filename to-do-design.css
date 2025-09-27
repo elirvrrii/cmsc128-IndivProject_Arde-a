@@ -1,5 +1,96 @@
+body {
+    background: #3b4361;
+}
+
+.container {
+    background: rgb(250, 248, 248);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+.container h1 {
+    font-size: 30px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.add-task {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    width: 100%;
+}
+
+.task-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 6px solid transparent;
+    padding-left: 10px;
+}
+
+.task-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-info {
+    display: flex;
+}
+
+.task-actions {
+    gap: 8px;
+    flex: 1;
+}
+
+#taskDetails {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+#addTaskText {
+    flex: 1;
+}
+
+#taskName {
+    width: 100%;
+    padding: 6px 10px;
+    box-sizing: border-box;
+}
+
+#addTaskButton button {
+    padding: 6px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    height: 100%;
+}
+
+#taskDetails2 {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+#taskDetail2 input, select {
+    flex: 1;
+    padding: 6px 10px;
+    box-sizing: border-box;
+}
+
 .task-list{
-    background-color: #F2F2F2;
+    display: flex; 
+    flex-direction: column;
+    padding: 7px;
 }
 
 #task-form input, select{
@@ -8,7 +99,8 @@
 }
 
 #sort{
-    align-self: right;
+    text-align: right;
+    padding: 10px;
 }
 
 #sort button {
@@ -27,4 +119,16 @@
 .completed {
     text-decoration: line-through;
     color: gray;
+}
+
+.priority-low {
+    border-color: green;
+}
+
+.priority-medium {
+    border-color: orange;
+}
+
+.priority-high {
+    border-color: red;
 }
