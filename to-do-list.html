@@ -35,15 +35,13 @@
                     <div class="col-md-3 d-grid">
                         <button id="addForm" type="submit" class="btn btn-primary">ADD</button>
                     </div>
-
-
                 </div>
             </form>
         </div>
         <br><br>
         <div id="task-list">
             <div id="sort" class="d-flex justify-content-end gap-2 mb-3">
-                Sort by: <br>
+                Sort by:
                 <button id="sortDateAdded" class="btn btn-sm">Date Added</button>
                 <button id="sortDueDate" class="btn btn-sm">Due Date</button>
                 <button id="sortPriority" class="btn btn-sm">Priority</button>
@@ -87,8 +85,82 @@
                 addedOn: Date.now()
             }).then(() => {
                 document.getElementById('task-form').reset();
-            }).catch((error) => {
-                console.log(error);
+            }).catch((err) => {
+                console.error("Add failed:", err);
+            });
+        }
+
+
+        function deleteTask(task, taskDiv) { // function for deleting task
+            if (confirm("Are you sure you want to delete this task?")) {
+                const deletedTask = { ...task };
+                remove(ref(db, "tasks/" + task.id)).then(() => {
+                    taskDiv.remove();
+                    showUndoToast("Task deleted", () => {
+                        set(ref(db, "tasks/" + task.id), deletedTask);
+                    });
+                }).catch((err) => console.error("Delete failed:", err));
+            }
+        }
+
+        function showUndoToast(message, undoCallback) { // function for the undo toast when deleting task
+            const undoToast = document.createElement('div');
+            undoToast.className = "undoToast";
+            undoToast.innerHTML = `
+                <div id="undoText"><p>${message}</p></div>
+                <div id="undoFunction"><button id="undo-btn">Undo</button></div>
+                <div id="undoClose"><button id="close-btn">&times;</button></div>
+            `;
+            document.body.appendChild(undoToast);
+
+            undoToast.querySelector('#undo-btn').addEventListener('click', () => {
+                undoCallback();
+                undoToast.remove();
+                window.location.reload();
+            });
+            undoToast.querySelector('#close-btn').addEventListener('click', () => {
+                undoToast.remove();
+                window.location.reload();
+            });
+
+            setTimeout(() => {
+                if (undoToast.parentNode) undoToast.remove();
+            }, 5000);
+        }
+
+        function editTask(task, taskDiv) { // function for editing task
+            const infoDiv = taskDiv.querySelector('.task-info');
+            const actionsDiv = taskDiv.querySelector('.task-actions');
+
+            infoDiv.innerHTML = `
+                <input type="text" class="form-control" value="${task.name}">
+                <input type="date" class="form-control" value="${task.dueDate}">
+                <input type="time" class="form-control" value="${task.dueTime}">
+                <select class="form-select">
+                    <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low &#129001</option>
+                    <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium &#128999</option>
+                    <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High &#128997</option>
+                </select>
+            `;
+
+            actionsDiv.innerHTML = `
+                <button class="save-btn btn btn-sm btn-success me-2">Save</button>
+                <button class="cancel-btn btn btn-sm btn-secondary">Cancel</button>
+            `;
+
+            actionsDiv.querySelector(".save-btn").addEventListener('click', () => {
+                const updatedTask = {
+                    name: infoDiv.querySelector('input[type="text"]').value,
+                    dueDate: infoDiv.querySelector('input[type="date"]').value,
+                    dueTime: infoDiv.querySelector('input[type="time"]').value,
+                    priority: infoDiv.querySelector('select').value
+                };
+                update(ref(db, "tasks/" + task.id), updatedTask).catch(err => console.error("Update failed:", err));
+                window.location.reload();
+            });
+
+            actionsDiv.querySelector(".cancel-btn").addEventListener('click', () => {
+                renderTasks(tasksArray);
             });
         }
 
@@ -100,7 +172,7 @@
             renderTasks(tasksArray);
         });
 
-        function renderTasks(tasks) { // function to render tasks to the DOM
+        function renderTasks(tasks) { // function to render tasks on the DOM
             indvTasks.innerHTML = '';
             tasks.forEach(task => {
                 const taskID = task.id;
@@ -131,81 +203,31 @@
                     p.classList.toggle('completed', isChecked);
                 });
 
-                taskDiv.querySelector(".delete-btn").addEventListener('click', () => { // function when delete button is clicked
-                    if (confirm("Are you sure you want to delete this task?")) {
-                        const deletedTask = { ...task, id: taskID };
-                        remove(ref(db, "tasks/" + taskID)).then(() => {
-                            taskDiv.remove();
-                            const undoToast = document.createElement('div');
-                            undoToast.className = "undoToast";
-                            undoToast.innerHTML = `
-                                <div id="undoText"><p>Task Deleted</p></div>
-                                <div id="undoFunction"><button id="undo-btn">Undo</button></div>
-                                <div id="undoClose"><button id="close-btn" onclick="this.parentElement.parentElement.remove();">&times;</button></div>
-                            `;
-                            document.body.appendChild(undoToast); // function to undo delete
-                            undoToast.querySelector('#undo-btn').addEventListener('click', () => {
-                                set(ref(db, "tasks/" + taskID), deletedTask).then(() => {
-                                    undoToast.remove();
-                                    window.location.reload();
-                                });
-                            });
-                            setTimeout(() => {
-                                if (undoToast.parentNode) undoToast.remove();
-                            }, 5000);
-                        });
-                    }
+                taskDiv.querySelector(".delete-btn").addEventListener('click', () => {
+                    deleteTask(task, taskDiv);
                 });
 
-                taskDiv.querySelector(".edit-btn").addEventListener('click', () => { // function when edit button is clicked
-                    const infoDiv = taskDiv.querySelector('.task-info');
-                    const actionsDiv = taskDiv.querySelector('.task-actions');
-                    infoDiv.innerHTML = `
-                        <input type="text" class="form-control" value="${task.name}">
-                        <input type="date" class="form-control" value="${task.dueDate}">
-                        <input type="time" class="form-control" value="${task.dueTime}">
-                        <select class="form-select">
-                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low &#129001</option>
-                            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium &#128999</option>
-                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High &#128997</option>
-                        </select>
-                    `;
-                    actionsDiv.innerHTML = `
-                        <button class="save-btn btn btn-sm btn-success me-2">Save</button>
-                        <button class="cancel-btn btn btn-sm btn-secondary">Cancel</button>
-                    `;
-                    actionsDiv.querySelector(".save-btn").addEventListener('click', () => {
-                        const updatedTask = {
-                            name: infoDiv.querySelector('input[type="text"]').value,
-                            dueDate: infoDiv.querySelector('input[type="date"]').value,
-                            dueTime: infoDiv.querySelector('input[type="time"]').value,
-                            priority: infoDiv.querySelector('select').value
-                        };
-                        update(ref(db, "tasks/" + taskID), updatedTask);
-                        window.location.reload();
-                    });
-                    actionsDiv.querySelector(".cancel-btn").addEventListener('click', () => {
-                        renderTasks(tasksArray);
-                    });
+                taskDiv.querySelector(".edit-btn").addEventListener('click', () => {
+                    editTask(task, taskDiv);
                 });
 
-                indvTasks.appendChild(taskDiv); // appends task card to the container
+                indvTasks.appendChild(taskDiv);
             });
         }
 
-        document.getElementById('task-form').addEventListener('submit', function (e) { // event listener for adding task
+        document.getElementById('task-form').addEventListener('submit', function (e) { // event listener for submitting a task
             e.preventDefault();
             addData();
         });
 
         // the following are event listeners for the sorting buttons
 
-        document.getElementById('sortDateAdded').addEventListener('click', () => { 
+        document.getElementById('sortDateAdded').addEventListener('click', () => {  
             tasksArray.sort((a, b) => a.addedOn - b.addedOn);
             renderTasks(tasksArray);
         });
 
-        document.getElementById('sortDueDate').addEventListener('click', () => {
+        document.getElementById('sortDueDate').addEventListener('click', () => { 
             tasksArray.sort((a, b) => new Date(a.dueDate + " " + a.dueTime) - new Date(b.dueDate + " " + b.dueTime));
             renderTasks(tasksArray);
         });

@@ -93,7 +93,6 @@ body {
 
 #task-form input, #task-form select{
     margin-top: 5px;
-    appearance: auto;
 }
 
 input[type="checkbox"] {
