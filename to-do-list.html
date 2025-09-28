@@ -9,37 +9,46 @@
 <body>
     <div class="container">
         <h1>WHAT TO-DO.</h1>
-        <div class="d-flex add-task">
-            <form id="task-form">
-                <div id="taskDetails">
-                    <div id="addTaskText">
-                        <input type="text" id="taskName" placeholder="Enter your task..." required><br>
-                    </div>
-                    <div id="addTaskButton">
-                        <button id="addForm" type="submit">&gt;</button>
-                    </div>
-                    <hr>
+        <div id="add-task" class="mb-4">
+            <form id="task-form" class="card shadow-sm p-3 rounded-3">
+                <div id="taskDetails" class="mb-3">
+                    <input type="text" id="taskName" class="form-control form-control-lg" placeholder="Enter your task..." required>
                 </div>
-                <div id="taskDetails2">
-                    <input type="date" id="taskDueDate" required>
-                    <input type="time" id="taskDueTime" required>
-                    <select id="taskPriority" required>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
+
+                <div id="taskDetails2" class="row g-2">
+                    <div class="col-md-3">
+                        <input type="date" id="taskDueDate" class="form-control" required>
+                    </div>
+                        
+                    <div class="col-md-3">
+                        <input type="time" id="taskDueTime" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <select id="taskPriority" class="form-control" required>
+                            <option value="low">Low &#129001</option>
+                            <option value="medium">Medium &#128999</option>
+                            <option value="high">High &#128997</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 d-grid">
+                        <button id="addForm" type="submit" class="btn btn-primary">ADD</button>
+                    </div>
+
+
                 </div>
             </form>
         </div>
         <br><br>
-        <div class="task-list">
-            <div id="sort">
+        <div id="task-list">
+            <div id="sort" class="d-flex justify-content-end gap-2 mb-3">
                 Sort by: <br>
-                <button id="sortDateAdded">Date Added</button>
-                <button id="sortDueDate">Due Date</button>
-                <button id="sortPriority">Priority</button>
+                <button id="sortDateAdded" class="btn btn-sm">Date Added</button>
+                <button id="sortDueDate" class="btn btn-sm">Due Date</button>
+                <button id="sortPriority" class="btn btn-sm">Priority</button>
             </div>
-            <div id="indv-tasks"></div>
+            <div id="indv-tasks" class="d-flex flex-column gap-2"></div>
         </div>
     </div>
 
@@ -77,10 +86,8 @@
                 isDone: false,
                 addedOn: Date.now()
             }).then(() => {
-                alert("Data added successfully.");
                 document.getElementById('task-form').reset();
             }).catch((error) => {
-                alert("Error.");
                 console.log(error);
             });
         }
@@ -100,17 +107,17 @@
                 const taskDiv = document.createElement('div');
                 taskDiv.classList.add("card", "p-2", "mb-2"); // creates a task card when added task is rendered
                 taskDiv.innerHTML = ` 
-                    <div class="task-card priority-${task.priority}">
+                    <div class="task-card priority-${task.priority} card-body d-flex justify-content-between align-items-center">
                         <div class="task-info d-flex align-items-center">
                             <input type="checkbox" class="markasDone me-2" data-id="${taskID}" ${task.isDone ? 'checked' : ''}>
                             <div>
                                 <h5${task.isDone ? ' class="completed"' : ''}>${task.name}</h5>
                                 <p${task.isDone ? ' class="completed"' : ''}>Due: ${task.dueDate} ${task.dueTime}</p>
                             </div>
-                        </div>
-                        <div class="task-actions mt-2">
+                        </div> 
+                        <div class="task-actions d-flex gap-2">
                             <button class="edit-btn btn btn-sm btn-outline-primary me-2" data-id="${taskID}">Edit</button>
-                            <button class="delete-btn btn btn-sm btn-outline-danger">Delete</button>
+                            <button class="delete-btn btn btn-sm btn-outline-danger" data-id="${taskID}">Delete</button>
                         </div>
                     </div>
                 `;
@@ -154,13 +161,13 @@
                     const infoDiv = taskDiv.querySelector('.task-info');
                     const actionsDiv = taskDiv.querySelector('.task-actions');
                     infoDiv.innerHTML = `
-                        <input type="text" value="${task.name}">
-                        <input type="date" value="${task.dueDate}">
-                        <input type="time" value="${task.dueTime}">
-                        <select>
-                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low</option>
-                            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
-                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
+                        <input type="text" class="form-control" value="${task.name}">
+                        <input type="date" class="form-control" value="${task.dueDate}">
+                        <input type="time" class="form-control" value="${task.dueTime}">
+                        <select class="form-select">
+                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low &#129001</option>
+                            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium &#128999</option>
+                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High &#128997</option>
                         </select>
                     `;
                     actionsDiv.innerHTML = `
@@ -178,7 +185,7 @@
                         window.location.reload();
                     });
                     actionsDiv.querySelector(".cancel-btn").addEventListener('click', () => {
-                        window.location.reload();
+                        renderTasks(tasksArray);
                     });
                 });
 
