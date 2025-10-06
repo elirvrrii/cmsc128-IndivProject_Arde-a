@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="login-design.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <h2>Welcome, placeholder!</h2>
+            <div id="profile-information"> <!-- add an edit button-->
+                <h3>Information</h3>
+                <p>Name:</p>
+                <p>Email:</p>
+                <p>Password:</p> <!-- there should be a button that shows the hidden password-->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import { getDatabase, ref, push, set, update, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+        const firebaseConfig = { // firebase configuration
+            apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
+            authDomain: "what-to-do-2fcc7.firebaseapp.com",
+            databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "what-to-do-2fcc7",
+            storageBucket: "what-to-do-2fcc7.appspot.com",
+            messagingSenderId: "982422793450",
+            appId: "1:982422793450:web:9339738576ddf5837ebb93"
+        };
+
+        const app = initializeApp(firebaseConfig); // initializes firebase and grabs the db
+        const db = getDatabase();
+    </script>
+</body>
+</html>
