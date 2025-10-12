@@ -1,70 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="login-design.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login/Signup</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="row">
-            <h2>Sign Up</h2>
-            <form id="sign-up-form">
-                <label for="signupName">Name:</label>
-                <input type="text" id="signupName" placeholder="Name" required><br>
+<body class="">
 
-                <label for="signupEmail">Email:</label>
-                <input type="email" id="signupEmail" placeholder="Email" required><br>
+  <div class="container">
 
-                <label for="signupPassword">Password:</label> <!-- show button, eye icon-->
-                <input type="password" id="signupPassword" placeholder="Password" required><br>
-
-                <button type="submit" id="signupSubmit">Sign Up</button>
-            </form>
-        </div>
+    <div id="signup-section" class="d-none">
+      <h4>Sign Up</h4>
+      <form id="signup-form">
+        <input type="text" id="signupName" placeholder="Name" required />
+        <input type="email" id="signupEmail" placeholder="Email" required />
+        <input type="password" id="signupPassword" placeholder="Password" required />
+        <button type="submit">Sign Up</button>
+      </form>
+      <p>
+        Already have an account? <a href="#" id="to-login">Login</a>
+      </p>
     </div>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getDatabase, ref, push, set, update, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
-        const firebaseConfig = { // firebase configuration
-            apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
-            authDomain: "what-to-do-2fcc7.firebaseapp.com",
-            databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "what-to-do-2fcc7",
-            storageBucket: "what-to-do-2fcc7.appspot.com",
-            messagingSenderId: "982422793450",
-            appId: "1:982422793450:web:9339738576ddf5837ebb93"
-        };
+    <div id="login-section">
+      <h4>Login</h4>
+      <form id="login-form">
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p>
+        Forgot password? <a href="#" id="to-reset">Reset</a><br>
+        No account? <a href="#" id="to-signup">Sign up</a>
+      </p>
+    </div>
 
-        const app = initializeApp(firebaseConfig); // initializes firebase and grabs the db
-        const db = getDatabase();
+    <div id="reset-section" class="d-none">
+      <h4>Reset Password</h4>
+      <form id="reset-form">
+        <input type="email" id="resetEmail" placeholder="Enter your email" required />
+        <button type="submit">Send Reset Email</button>
+      </form>
+      <p>
+        <a href="#" id="back-login">Back to login</a>
+      </p>
+    </div>
 
-        const signupName = document.getElementById("signupName");
-        const signupEmail = document.getElementById("signupEmail");
-        const signupPassword = document.getElementById("signupPassword");
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, update} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
-        function addAccount(){
-            const accountRef = push(ref(db, "accounts"));
-            set(accountRef, {
-                accountName: signupName.value,
-                accountEmail: signupEmail.value,
-                accountPassword: signupPassword.value
-            }).then(() => {
-                document.getElementById("sign-up-form").reset();
-                alert("Account created successfully!");
-                window.location.href = "login.html";
-            }).catch((err) => {
-                console.error("Add failed: ", err);
-            });
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
+      authDomain: "what-to-do-2fcc7.firebaseapp.com",
+      databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "what-to-do-2fcc7",
+      storageBucket: "what-to-do-2fcc7.appspot.com",
+      messagingSenderId: "982422793450",
+      appId: "1:982422793450:web:9339738576ddf5837ebb93"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getDatabase();
+
+    onAuthStateChanged(auth, (user) => {
+        if(user){
+            window.location.href = "profile.html";
+        }else{
+            show("login-section");
         }
+    })
 
-        document.getElementById('sign-up-form').addEventListener('submit', function (e) { // event listener for submitting a task
-            e.preventDefault();
-            addAccount();
-        });
-    </script>
+    function show(sectionId) { //cycles through sections with d-none class
+      document.querySelectorAll('#signup-section, #login-section, #reset-section')
+        .forEach(div => div.classList.add('d-none'));
+      document.getElementById(sectionId).classList.remove('d-none');
+    }
+
+    document.getElementById("to-login").addEventListener("click", () => show("login-section"));
+    document.getElementById("to-signup").addEventListener("click", () => show("signup-section"));
+    document.getElementById("to-reset").addEventListener("click", () => show("reset-section"));
+    document.getElementById("back-login").addEventListener("click", () => show("login-section"));
+
+    document.getElementById("signup-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = signupName.value;
+      const email = signupEmail.value;
+      const password = signupPassword.value;
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          set(ref(db, "users/" + user.uid), {
+            name: name,
+            email: email,
+            password: password
+          });
+          alert("Sign up successful!");
+          show("login-section");
+        })
+        .catch((error) => alert(error.message));
+    });
+
+    document.getElementById("login-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = loginEmail.value;
+      const password = loginPassword.value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
+            await update(ref(db, "users/" + user.uid), { password });
+            window.location.href = "profile.html";
+        })
+        .catch((error) => alert(error.message));
+    });
+
+    document.getElementById("reset-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = resetEmail.value;
+      sendPasswordResetEmail(auth, email)
+        .then(() => alert("Password reset email sent!"))
+        .catch((error) => alert(error.message));
+    });
+  </script>
 </body>
 </html>

@@ -1,97 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Page</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="login-design.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile Page</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="row">
-            <h2>Welcome, placeholder!</h2>
-            <div id="profile-information">
-            </div>
-            <hr>
-        </div>
+<body class="p-4 bg-light">
+
+  <div class="container">
+    <h2 id="welcomeText">Welcome!</h2>
+    <div id="profile-information">
+      </div>
     </div>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getDatabase, ref, push, set, update, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
-        const firebaseConfig = { // firebase configuration
-            apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
-            authDomain: "what-to-do-2fcc7.firebaseapp.com",
-            databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "what-to-do-2fcc7",
-            storageBucket: "what-to-do-2fcc7.appspot.com",
-            messagingSenderId: "982422793450",
-            appId: "1:982422793450:web:9339738576ddf5837ebb93"
-        };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
+      authDomain: "what-to-do-2fcc7.firebaseapp.com",
+      databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "what-to-do-2fcc7",
+      storageBucket: "what-to-do-2fcc7.appspot.com",
+      messagingSenderId: "982422793450",
+      appId: "1:982422793450:web:9339738576ddf5837ebb93"
+    };
 
-        const app = initializeApp(firebaseConfig); // initializes firebase and grabs the db
-        const db = getDatabase();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getDatabase();
+    
+    onAuthStateChanged(auth, async (user) => { //retains information if user is logged on
+      const container = document.getElementById("profile-information");
+      if (!user) {
+        window.location.href = "sign-up.html";
+        return;
+      }
 
-        const userName = localStorage.getItem("userLoginName");
-        const userEmail = localStorage.getItem("userLoginEmail");   
-        const userPassword = localStorage.getItem("userLoginPassword");
+      const uid = user.uid;
+      const userRef = ref(db, "users/" + uid);
+      const snapshot = await get(userRef);
 
-        if(!userEmail){
-            window.location.href = "login.html";
-        }else{
-            document.querySelector("h2").innerText = `Welcome, ${userName}!`;
-            document.getElementById("profile-information").innerHTML = `
-                <h3>Information</h3>
-                <button id="editBtn">Edit</button><br>
-                <p><strong>Name:</strong> ${userName}</p>
-                <p><strong>Email:</strong> ${userEmail}</p>
-            `;
-            document.getElementById("editBtn").addEventListener("click", editAccount);
+      if (snapshot.exists()) { 
+        const userData = snapshot.val();
+
+        document.getElementById("welcomeText").innerText = `Welcome, ${userData.name}!`;
+        container.innerHTML = `
+          <h4>Profile Information</h4>
+          <p><strong>Name:</strong> ${userData.name}</p>
+          <p><strong>Email:</strong> ${userData.email}</p>
+          <div>
+            <button id="editBtn">Edit</button>
+            <button id="logoutBtn">Logout</button>
+          </div>
+        `;
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          signOut(auth).then(() => window.location.href = "sign-up.html");
+        });
+
+        document.getElementById("editBtn").addEventListener("click", () => {
+          editProfile(uid, userData);
+        });
+
+      } else {
+        container.innerHTML = `<p>Error loading user data.</p>`;
+      }
+    });
+
+    function editProfile(uid, userData) {
+      const container = document.getElementById("profile-information");
+      container.innerHTML = `
+        <h4>Edit Profile</h4>
+        <form id="edit-form">
+          <div>
+            <label>Name</label>
+            <input type="text" id="editName" value="${userData.name}" required>
+          </div>
+          <div>
+            <label>Email</label>
+            <input type="email" id="editEmail" value="${userData.email}" required>
+          </div>
+          <div>
+            <label>Password</label>
+            <input type="password" id="editPassword" placeholder="Enter new password">
+          </div>
+          <button type="submit">Save Changes</button>
+          <button type="button" id="cancelBtn">Cancel</button>
+        </form>
+      `;
+
+      document.getElementById("cancelBtn").addEventListener("click", () => {
+        window.location.reload();
+      });
+
+      document.getElementById("edit-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const newName = document.getElementById("editName").value;
+        const newEmail = document.getElementById("editEmail").value;
+        const newPassword = document.getElementById("editPassword").value;
+
+        try {
+          const user = auth.currentUser;
+          if (newEmail !== user.email) {
+            await updateEmail(user, newEmail);
+          }
+          if (newPassword.trim() !== "") {
+            await updatePassword(user, newPassword);
+          }
+
+          await update(ref(db, "users/" + uid), {
+            name: newName,
+            email: newEmail,
+            password: newPassword || userData.password
+          });
+
+          alert("Profile updated successfully!");
+          window.location.reload();
+        } catch (error) {
+          console.error(error);
+          alert("Error updating profile: " + error.message);
         }
-
-        function editAccount(){
-            const editDiv = document.getElementById("profile-information");
-            editDiv.innerHTML = `
-                <h3>Edit Information</h3>
-                <form id="edit-form">
-                    <label for="editName">Name:</label>
-                    <input type="text" id="editName" value="${userName}" required><br>
-
-                    <label for="editEmail">Email:</label>
-                    <input type="email" id="editEmail" value="${userEmail}" required><br>
-
-                    <label for="editPassword">Password:</label>
-                    <input type="password" id="editPassword" value="${userPassword}" required><br>
-
-                    <button type="submit" id="saveBtn">Save</button>
-                    <button type="button" id="cancelBtn">Cancel</button>
-                </form>
-            `;
-
-            document.getElementById("edit-form").addEventListener("submit", (e) => {
-                e.preventDefault();
-                const updatedUser = {
-                    accountName: document.getElementById("editName").value,
-                    accountEmail: document.getElementById("editEmail").value,
-                    accountPassword: document.getElementById("editPassword").value
-                };
-                update(ref(db, 'accounts/' + userEmail.replace('.', '_')), updatedUser);
-
-                localStorage.setItem("userLoginName", updatedUser.accountName);
-                localStorage.setItem("userLoginEmail", updatedUser.accountEmail);
-                localStorage.setItem("userLoginPassword", updatedUser.accountPassword);
-
-                window.location.reload();
-
-            });
-
-            document.getElementById("cancelBtn").addEventListener("click", (e) => {
-                window.location.reload();
-            });
-        }
-
-    </script>
+      });
+    }
+  </script>
 </body>
 </html>
