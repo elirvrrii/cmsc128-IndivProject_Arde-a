@@ -90,7 +90,7 @@
 
     onAuthStateChanged(auth, (user) => { //if user has log in on a previous session, they automatically move to the profile (data persistence)
       if (user && user.emailVerified) {
-        window.location.href = "profile.html";
+        window.location.href = "to-do-list.html";
       } else {
         show("login-section");
       }
@@ -108,8 +108,7 @@
 
         await set(ref(db, "users/" + user.uid), { //if user is created sets a unique id in a database users
           name, 
-          email, 
-          password 
+          email
         });
 
         await sendEmailVerification(user); //if user is created, a verification link will be sent 
@@ -138,9 +137,9 @@
           return;
         }
 
-        await update(ref(db, "users/" + user.uid), { password }); //for each login, password will be updated in the rtd in case of password reset
+        await update(ref(db, "users/" + user.uid), { }); //for each login, password will be updated in the rtd in case of password reset
 
-        window.location.href = "profile.html";
+        window.location.href = "to-do-list.html";
       } catch (error) {
         alert("Login error: " + error.message);
       }
