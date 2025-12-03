@@ -6,6 +6,7 @@
   <title>Login / Signup - WHAT TO-DO</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="login-design.css">
+  <link rel="stylesheet" href="global.css">
 </head>
 <body>
   <div class="auth-container">
@@ -92,15 +93,20 @@
       if (user && user.emailVerified) {
         window.location.href = "to-do-list.html";
       } else {
-        show("login-section");
+        // Check for signup intent in URL
+        if (window.location.search.includes("signup")) {
+          show("signup-section");
+        } else {
+          show("login-section");
+        }
       }
     });
 
     document.getElementById("signup-form").addEventListener("submit", async (e) => { //for signing up
       e.preventDefault(); 
-      const name = signupName.value;
-      const email = signupEmail.value;
-      const password = signupPassword.value;
+      const name = document.getElementById("signupName").value;
+      const email = document.getElementById("signupEmail").value;
+      const password = document.getElementById("signupPassword").value;
 
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -123,8 +129,8 @@
 
     document.getElementById("login-form").addEventListener("submit", async (e) => { //for users who are going to log in
       e.preventDefault(); 
-      const email = loginEmail.value;
-      const password = loginPassword.value;
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -137,8 +143,6 @@
           return;
         }
 
-        await update(ref(db, "users/" + user.uid), { }); //for each login, password will be updated in the rtd in case of password reset
-
         window.location.href = "to-do-list.html";
       } catch (error) {
         alert("Login error: " + error.message);
@@ -147,7 +151,7 @@
 
     document.getElementById("reset-form").addEventListener("submit", async (e) => { //in case user resets password
       e.preventDefault();
-      const email = resetEmail.value;
+      const email = document.getElementById("resetEmail").value;
 
       try {
         await sendPasswordResetEmail(auth, email);
