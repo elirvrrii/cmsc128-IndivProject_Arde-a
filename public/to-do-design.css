@@ -1,0 +1,411 @@
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 30px;
+}
+
+h1 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    font-size: 2.5rem;
+}
+
+.card {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+}
+
+.task-card {
+    padding-left: 20px;
+}
+
+.priority-low { 
+    border-left: 6px solid #28a745 !important;
+}
+
+.priority-medium { 
+    border-left: 6px solid #ffc107 !important;
+}
+
+.priority-high { 
+    border-left: 6px solid #dc3545 !important;
+}
+
+.task-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.task-info h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 18px;
+    color: #2d3748;
+}
+
+.task-info p {
+    margin: 4px 0 0 0;
+    color: #718096;
+    font-size: 14px;
+}
+
+.completed { 
+    text-decoration: line-through; 
+    opacity: 0.6; 
+}
+
+.task-card-footer { 
+    margin-top: 10px; 
+    padding-top: 10px; 
+    border-top: 1px solid #dee2e6; 
+    font-size: 0.85rem; 
+    color: #6c757d; 
+}
+
+.date-added {
+    font-size: 0.75rem;
+    color: #a0aec0;
+    text-align: right;
+}
+
+#indv-tasks {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+#indv-tasks > .card {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+}
+
+.task-actions {
+    display: flex !important;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover .task-actions {
+    opacity: 1;
+}
+
+.task-actions.editing {
+    opacity: 1 !important;
+}
+
+.icon-btn { 
+    background: none; 
+    border: none; 
+    padding: 5px 10px; 
+    cursor: pointer; 
+    transition: all 0.2s;
+    font-size: 1.1rem;
+}
+
+.icon-btn:hover { 
+    transform: scale(1.2); 
+}
+
+.icon-btn.edit { 
+    color: #0d6efd; 
+}
+
+.icon-btn.delete { 
+    color: #dc3545; 
+}
+
+#task-form {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: none;
+    border-radius: 15px;
+}
+
+.form-control, 
+.form-select {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s;
+}
+
+.form-control:focus, 
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none;
+}
+
+.member-email-input {
+    border-radius: 10px;
+}
+
+.edit-input-name,
+.edit-input-date,
+.edit-input-time,
+.edit-input-priority {
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.edit-input-name:focus,
+.edit-input-date:focus,
+.edit-input-time:focus,
+.edit-input-priority:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #667eea;
+    border-radius: 6px;
+}
+
+.markasDone {
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-outline-secondary, 
+.btn-outline-danger {
+    border-width: 2px;
+    font-weight: 600;
+}
+
+.btn-sm {
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.save-edit-btn {
+    background: #48bb78 !important;
+    border-color: #48bb78 !important;
+    color: white !important;
+}
+
+.save-edit-btn:hover {
+    background: #38a169 !important;
+}
+
+.cancel-edit-btn {
+    background: #a0aec0 !important;
+    border-color: #a0aec0 !important;
+    color: white !important;
+}
+
+.cancel-edit-btn:hover {
+    background: #718096 !important;
+}
+
+.sort-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.sort-btn-active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.current-mode-badge { 
+    display: inline-block; 
+    padding: 10px 20px; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    color: white; 
+    border-radius: 25px; 
+    font-weight: 600; 
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.collab-list-item { 
+    cursor: pointer; 
+    transition: all 0.3s;
+    border-radius: 10px;
+}
+
+.collab-list-item:hover { 
+    background: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.collab-list-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.collab-action-btn { 
+    padding: 6px 10px; 
+    font-size: 1rem; 
+    border: none; 
+    background: none; 
+    transition: all 0.2s;
+    border-radius: 5px;
+}
+
+.collab-action-btn:hover { 
+    transform: scale(1.15);
+    background: rgba(0,0,0,0.05);
+}
+
+.member-badge { 
+    display: inline-block; 
+    padding: 8px 15px; 
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 20px; 
+    font-size: 0.85rem; 
+    margin: 5px;
+    box-shadow: 0 2px 10px rgba(245, 87, 108, 0.3);
+}
+
+.member-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.member-info {
+    flex: 1;
+}
+
+.member-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #2d3748;
+    margin-bottom: 2px;
+}
+
+.member-email {
+    font-size: 13px;
+    color: #718096;
+}
+
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    border: none;
+}
+
+.modal-title {
+    font-weight: 700;
+}
+
+.btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.toast-container { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 9999; 
+}
+
+.undoToast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 9999;
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#collab-list-options {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#collab-list-options::-webkit-scrollbar {
+    width: 8px;
+}
+
+#collab-list-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#collab-list-options::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .task-actions {
+        opacity: 1;
+    }
+}

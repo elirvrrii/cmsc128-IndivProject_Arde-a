@@ -158,7 +158,6 @@ a:hover::after {
     gap: 20px;
 }
 
-/* Add smooth transitions for section switching */
 #signup-section, #login-section, #reset-section {
     animation: slideIn 0.3s ease;
 }

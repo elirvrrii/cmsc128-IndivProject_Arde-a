@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile Page</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body class="p-4 bg-light">
+  <div class="container profile-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <a href="to-do-list.html" class="btn btn-outline-secondary back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+        </svg>
+        Back
+      </a>
+      <h2 id="welcomeText" class="mb-0">Welcome!</h2>
+      <div style="width: 120px;"></div> 
+    </div>
+    <div id="profile-information"></div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import {
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    getAuth,
+    signOut,
+    onAuthStateChanged,
+    updatePassword,
+    verifyBeforeUpdateEmail,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
+    authDomain: "what-to-do-2fcc7.firebaseapp.com",
+    databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "what-to-do-2fcc7",
+    storageBucket: "what-to-do-2fcc7.appspot.com",
+    messagingSenderId: "982422793450",
+    appId: "1:982422793450:web:9339738576ddf5837ebb93"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const db = getDatabase();
+
+  function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function setButtonPending(btn, pending = true, pendingText = "Please wait...") {
+    if (!btn) return;
+    if (pending) {
+      btn.dataset.origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = pendingText;
+    } else {
+      btn.disabled = false;
+      if (btn.dataset.origText) btn.innerHTML = btn.dataset.origText;
+    }
+  }
+
+  // on auth state change -> load profile
+  onAuthStateChanged(auth, async (user) => {
+    const container = document.getElementById("profile-information");
+    container.innerHTML = ""; // clear
+    if (!user) {
+      // not signed in -> go to index
+      window.location.href = "index.html";
+      return;
+    }
+
+    const uid = user.uid;
+    const userRef = ref(db, "users/" + uid);
+
+    try {
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) {
+        container.innerHTML = `<div class="alert alert-warning">No profile data found.</div>`;
+        document.getElementById("welcomeText").innerText = `Welcome!`;
+        return;
+      }
+
+      const userData = snapshot.val() || {};
+      const displayName = (userData.name && userData.name.trim()) ? userData.name.trim() : "User";
+      document.getElementById("welcomeText").innerText = `Welcome, ${displayName}!`;
+
+      // build profile card safely using escaped values
+      const escapedName = escapeHtml(userData.name || "");
+      const escapedEmail = escapeHtml(user.email || "");
+
+      container.innerHTML = `
+        <div class="card p-4 shadow-sm">
+          <h4 class="mb-3">Profile Information</h4>
+          <p><strong>Name:</strong> ${escapedName}</p>
+          <p><strong>Email:</strong> ${escapedEmail}</p>
+          <div class="d-flex gap-2 mt-3">
+            <button id="editBtn" class="btn btn-primary">Edit Profile</button>
+            <button id="logoutBtn" class="btn btn-danger">Logout</button>
+          </div>
+        </div>
+      `;
+
+      // attach listeners
+      document.getElementById("editBtn").addEventListener("click", () => editProfile(uid, userData, user));
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+          window.location.href = "login.html";
+        } catch (err) {
+          alert("Error signing out: " + (err.message || err));
+        }
+      });
+
+    } catch (err) {
+      console.error("Error loading user data:", err);
+      container.innerHTML = `<div class="alert alert-danger">Error loading user data: ${escapeHtml(err.message || err)}</div>`;
+    }
+  });
+
+  // edit profile
+  function editProfile(uid, userData, user) {
+    const container = document.getElementById("profile-information");
+    const safeName = escapeHtml(userData.name || "");
+    const safeEmail = escapeHtml(user.email || "");
+
+    container.innerHTML = `
+      <div class="card p-4 shadow-sm">
+        <h4 class="mb-3">Edit Profile</h4>
+        <form id="edit-form" class="d-flex flex-column gap-3" onsubmit="return false;">
+          <!-- Name Section -->
+          <div>
+            <label class="form-label">Name</label>
+            <input type="text" id="editName" class="form-control" value="${safeName}" required>
+            <button type="button" id="updateNameBtn" class="btn btn-success mt-2">Update Name</button>
+          </div>
+          
+          <!-- Email Section -->
+          <div>
+            <label class="form-label">Email</label>
+            <input type="email" id="editEmail" class="form-control" value="${safeEmail}" required>
+            <div class="mt-2">
+              <label class="form-label">Current Password (required for email change)</label>
+              <input type="password" id="emailCurrentPassword" class="form-control" placeholder="Enter current password">
+            </div>
+            <button type="button" id="updateEmailBtn" class="btn btn-success mt-2">Update Email</button>
+          </div>
+          
+          <!-- Password Section -->
+          <div>
+            <label class="form-label">New Password</label>
+            <input type="password" id="editPassword" class="form-control" placeholder="Enter new password">
+            <div class="mt-2">
+              <label class="form-label">Current Password (required for password change)</label>
+              <input type="password" id="passwordCurrentPassword" class="form-control" placeholder="Enter current password">
+            </div>
+            <button type="button" id="updatePasswordBtn" class="btn btn-success mt-2">Update Password</button>
+          </div>
+          
+          <div class="d-flex gap-2 mt-2">
+            <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.getElementById("cancelBtn").addEventListener("click", async () => {
+      // re-run auth state callback by fetching latest user data
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        window.location.href = "index.html";
+        return;
+      }
+      // rebuild the profile view by retrieving user data again
+      try {
+        const snapshot = await get(ref(db, "users/" + currentUser.uid));
+        const latestData = snapshot.exists() ? snapshot.val() : {};
+        editOrShowLatestProfile(latestData, currentUser.uid, currentUser); // helper to reuse logic
+      } catch (err) {
+        window.location.reload();
+      }
+    });
+
+    // helper that reconstructs profile view (used on cancel)
+    async function editOrShowLatestProfile(latestData, uidParam, currentUser) {
+      const snapshot = await get(ref(db, "users/" + uidParam));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        document.getElementById("profile-information").innerHTML = "";
+        window.location.reload();
+      } else {
+        window.location.reload();
+      }
+    }
+
+    // update Name
+    document.getElementById("updateNameBtn").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const newName = document.getElementById("editName").value.trim();
+      if (!newName) {
+        alert("Please enter a name");
+        return;
+      }
+
+      setButtonPending(btn, true, "Updating name...");
+      try {
+        await update(ref(db, "users/" + uid), { name: newName });
+        // update firebase auth profile displayName as well
+        if (auth.currentUser) {
+          await updateProfile(auth.currentUser, { displayName: newName });
+        }
+        alert("Name updated successfully!");
+        // re-render profile state
+        window.location.reload();
+      } catch (error) {
+        console.error("Update name error:", error);
+        alert("Error updating name: " + (error?.message || error));
+      } finally {
+        setButtonPending(btn, false);
+      }
+    });
+
+    // update email
+    document.getElementById("updateEmailBtn").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const newEmail = document.getElementById("editEmail").value.trim();
+      const currentPassword = document.getElementById("emailCurrentPassword").value;
+
+      if (!newEmail) {
+        alert("Please enter an email");
+        return;
+      }
+
+      if (!currentPassword) {
+        alert("Please enter your current password to update email");
+        return;
+      }
+
+      setButtonPending(btn, true, "Updating email...");
+      try {
+        // reauthenticate
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+
+        // send verification to NEW email (verifyBeforeUpdateEmail)
+        await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
+
+        alert("Verification email sent to the new address. Please verify the new email. You will be signed out now.");
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error("Update email error:", error);
+        if (error?.code === 'auth/wrong-password') {
+          alert("Incorrect password. Please try again.");
+        } else if (error?.code === 'auth/email-already-in-use') {
+          alert("This email is already in use.");
+        } else {
+          alert("Error updating email: " + (error?.message || error));
+        }
+      } finally {
+        setButtonPending(btn, false);
+      }
+    });
+
+    // update Password (requires current password)
+    document.getElementById("updatePasswordBtn").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const newPassword = document.getElementById("editPassword").value;
+      const currentPassword = document.getElementById("passwordCurrentPassword").value;
+
+      if (!newPassword) {
+        alert("Please enter a new password");
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        alert("Password must be at least 6 characters long");
+        return;
+      }
+
+      if (!currentPassword) {
+        alert("Please enter your current password to update password");
+        return;
+      }
+
+      setButtonPending(btn, true, "Updating password...");
+      try {
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+        alert("Password updated successfully!");
+        window.location.reload();
+      } catch (error) {
+        console.error("Update password error:", error);
+        if (error?.code === 'auth/wrong-password') {
+          alert("Incorrect current password. Please try again.");
+        } else {
+          alert("Error updating password: " + (error?.message || error));
+        }
+      } finally {
+        setButtonPending(btn, false);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

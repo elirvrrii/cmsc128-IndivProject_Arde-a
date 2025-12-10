@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WHAT TO-DO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="to-do-design.css">
+</head>
+<body>
+<div class="container my-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="mb-2">WHAT TO-DO.</h1>
+            <p class="text-muted mb-0 fs-5">Welcome, <span id="name">User</span>!</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="profile.html" class="btn btn-outline-secondary">
+                <i class="bi bi-person-circle me-1"></i> Profile
+            </a>
+            <button id="logoutBtn" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right me-1"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Mode Display & Switch Button -->
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="text-muted me-2 fw-semibold">Current Mode:</span>
+            <span class="current-mode-badge" id="currentModeBadge">
+                <i class="bi bi-person-fill me-2"></i>Personal
+            </span>
+        </div>
+        <button id="switchModeBtn" class="btn btn-primary btn-lg">
+            <i class="bi bi-arrow-left-right me-2"></i>Switch Mode
+        </button>
+    </div>
+
+    <!-- Task Form -->
+    <form id="task-form" class="card shadow-sm p-4 mb-4">
+        <input type="text" id="taskName" class="form-control form-control-lg mb-3" placeholder="✨ Enter your task..." required>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">📅 Due Date</label>
+                <input type="date" id="taskDueDate" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">🕐 Due Time</label>
+                <input type="time" id="taskDueTime" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">⚡ Priority</label>
+                <select id="taskPriority" class="form-select" required>
+                    <option value="low">🟢 Low</option>
+                    <option value="medium">🟡 Medium</option>
+                    <option value="high">🔴 High</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-plus-circle me-2"></i>ADD TASK
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Sort Buttons -->
+    <div class="sort-section">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-muted">
+                <i class="bi bi-funnel me-2"></i>Sort by:
+            </span>
+            <div class="d-flex gap-2">
+                <button id="sortDateAdded" class="btn btn-sm btn-outline-primary sort-btn">
+                    <i class="bi bi-clock-history me-1"></i>Date Added
+                </button>
+                <button id="sortDueDate" class="btn btn-sm btn-outline-primary sort-btn">
+                    <i class="bi bi-calendar-event me-1"></i>Due Date
+                </button>
+                <button id="sortPriority" class="btn btn-sm btn-outline-primary sort-btn">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Priority
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Container -->
+    <div id="indv-tasks" class="d-flex flex-column gap-3"></div>
+</div>
+
+<!-- Mode Switcher Modal -->
+<div class="modal fade" id="modeSwitcherModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-toggle-on me-2"></i>Switch Mode</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-3">
+                    <button id="selectPersonalMode" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-person me-2"></i>Personal Mode
+                    </button>
+                    <button id="selectCollabMode" class="btn btn-outline-success btn-lg">
+                        <i class="bi bi-people me-2"></i>Collaborative Mode
+                    </button>
+                </div>
+                
+                <!-- Collaborative Lists Selection (hidden initially) -->
+                <div id="collabListSelection" style="display:none;" class="mt-4">
+                    <h6 class="mb-3 fw-bold"><i class="bi bi-folder2-open me-2"></i>Select a Collaborative List:</h6>
+                    <div id="collabListOptions" class="d-flex flex-column gap-2 mb-3"></div>
+                    <hr>
+                    <div class="d-grid">
+                        <button id="openCreateCollabBtn" class="btn btn-success">
+                            <i class="bi bi-plus-circle me-2"></i>Create New List
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Collaborative List Modal -->
+<div class="modal fade" id="createCollabModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-square me-2"></i>Create Collaborative List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><i class="bi bi-journal-text me-2"></i>List Name</label>
+                    <input type="text" id="createCollabName" class="form-control" placeholder="Enter list name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><i class="bi bi-people me-2"></i>Add Members (Email Addresses)</label>
+                    <div id="memberEmailsContainer" class="mb-2"></div>
+                    <div class="input-group">
+                        <input type="email" id="createMemberEmail" class="form-control member-email-input" placeholder="Enter member email">
+                        <button type="button" id="addMemberEmailBtn" class="btn btn-outline-primary">
+                            <i class="bi bi-plus"></i> Add
+                        </button>
+                    </div>
+                    <small class="text-muted">Press Enter or click Add to add each email</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmCreateCollabBtn" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Create List
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Collaborative List Modal -->
+<div class="modal fade" id="editCollabModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Collaborative List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><i class="bi bi-journal-text me-2"></i>List Name</label>
+                    <input type="text" id="editCollabName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><i class="bi bi-people me-2"></i>Current Members</label>
+                    <div id="editMembersList" class="d-flex flex-wrap gap-2 mb-3"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><i class="bi bi-person-plus me-2"></i>Add New Member</label>
+                    <div class="input-group">
+                        <input type="email" id="editAddMemberEmail" class="form-control member-email-input" placeholder="Enter member email">
+                        <button type="button" id="editAddMemberBtn" class="btn btn-outline-primary">
+                            <i class="bi bi-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmEditCollabBtn" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Collaborative List Confirmation Modal -->
+<div class="modal fade" id="deleteCollabModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Collaborative List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold">Are you sure you want to delete this collaborative list?</p>
+                <p class="text-muted fw-semibold" id="deleteCollabName"></p>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle me-2"></i>⚠️ This will delete all tasks in this list!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteCollabBtn">
+                    <i class="bi bi-trash me-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Task Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-dark"><i class="bi bi-trash me-2"></i>Delete Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold">Are you sure you want to delete this task?</p>
+                <p class="text-muted fst-italic" id="deleteTaskName"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash me-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container for Undo -->
+<div class="toast-container">
+    <div id="undoToast" class="toast align-items-center text-white bg-dark border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle me-2"></i>Task deleted. 
+                <button class="btn btn-sm btn-warning ms-2" id="undoDeleteBtn">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Undo
+                </button>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getDatabase, ref, push, set, update, remove, onValue, off, get } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+// firebase initialization
+const firebaseConfig = { 
+    apiKey: "AIzaSyCfxNU7BbmtvNlTBdEFa4JEq8MbnT5r41Q",
+    authDomain: "what-to-do-2fcc7.firebaseapp.com",
+    databaseURL: "https://what-to-do-2fcc7-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "what-to-do-2fcc7",
+    storageBucket: "what-to-do-2fcc7.appspot.com",
+    messagingSenderId: "982422793450",
+    appId: "1:982422793450:web:9339738576ddf5837ebb93"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getDatabase();
+
+// DOM elements
+const taskName = document.getElementById('taskName');
+const taskDueDate = document.getElementById('taskDueDate');
+const taskDueTime = document.getElementById('taskDueTime');
+const taskPriority = document.getElementById('taskPriority');
+const indvTasks = document.getElementById('indv-tasks');
+const currentModeBadge = document.getElementById('currentModeBadge');
+const collabListOptions = document.getElementById('collabListOptions');
+
+let tasksArray = [];
+let currentCollab = null;
+let currentMode = 'personal';
+let pendingDelete = null;
+let deleteTimeout = null;
+let memberEmails = [];
+let currentEditingCollab = null;
+let userEmailCache = {};
+
+// modal instances
+const modeSwitcherModal = new bootstrap.Modal(document.getElementById('modeSwitcherModal'));
+const createCollabModal = new bootstrap.Modal(document.getElementById('createCollabModal'));
+const editCollabModal = new bootstrap.Modal(document.getElementById('editCollabModal'));
+const deleteCollabModal = new bootstrap.Modal(document.getElementById('deleteCollabModal'));
+const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+const undoToast = new bootstrap.Toast(document.getElementById('undoToast'));
+
+// formatting helpers
+const formatDate = d => {
+    if(!d) return '';
+    return new Date(d).toLocaleDateString('en-GB');
+};
+const formatTime = t => {
+    if(!t) return '';
+    return new Date(`1970-01-01T${t}`).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+};
+// date added with 12-hour time format (dd/mm/yyyy hh:mm AM/PM)
+const formatDateAdded = ts => {
+    if(!ts) return '';
+    return new Date(ts).toLocaleString('en-GB', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
+};
+
+// auth state
+let currentUser;
+onAuthStateChanged(auth, user => {
+    if(!user) return window.location.href = "index.html";
+    currentUser = user;
+    loadUserName(user.uid);
+    loadTasks(user.uid);
+    loadUserEmails();
+});
+
+// load user name from database
+async function loadUserName(uid) {
+    const userRef = ref(db, `users/${uid}`);
+    const snapshot = await get(userRef);
+    if(snapshot.exists()) {
+        const userData = snapshot.val();
+        document.getElementById('name').innerText = userData.name || 'User';
+    }
+}
+
+// load all user emails for lookup
+async function loadUserEmails() {
+    const usersRef = ref(db, 'users');
+    const snapshot = await get(usersRef);
+    if(snapshot.exists()) {
+        snapshot.forEach(child => {
+            const userData = child.val();
+            userEmailCache[child.key] = userData.email || 'Unknown';
+        });
+    }
+}
+
+// get UID from email
+async function getUidFromEmail(email) {
+    const usersRef = ref(db, 'users');
+    const snapshot = await get(usersRef);
+    if(snapshot.exists()) {
+        let foundUid = null;
+        snapshot.forEach(child => {
+            const userData = child.val();
+            if(userData.email === email) {
+                foundUid = child.key;
+            }
+        });
+        return foundUid;
+    }
+    return null;
+}
+
+// update mode badge
+function updateModeBadge() {
+    if(currentMode === 'personal') {
+        currentModeBadge.textContent = 'Personal';
+        currentModeBadge.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    } else {
+        currentModeBadge.textContent = 'Collaborative';
+        currentModeBadge.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+    }
+}
+
+// switch mode button
+document.getElementById('switchModeBtn').onclick = () => {
+    loadCollabs(currentUser.uid);
+    // reset collab selection UI
+    document.getElementById('collabListSelection').style.display = 'none';
+    modeSwitcherModal.show();
+};
+
+// select Personal Mode
+document.getElementById('selectPersonalMode').onclick = () => {
+    currentMode = 'personal';
+    currentCollab = null;
+    document.getElementById('collabListSelection').style.display = 'none';
+    updateModeBadge();
+    loadTasks(currentUser.uid);
+    modeSwitcherModal.hide();
+};
+
+// select Collaborative Mode
+document.getElementById('selectCollabMode').onclick = () => {
+    // show the collab list selector inside the same modal
+    document.getElementById('collabListSelection').style.display = 'block';
+};
+
+// open Create Collaborative List Modal
+document.getElementById('openCreateCollabBtn').onclick = () => {
+    memberEmails = [];
+    document.getElementById('createCollabName').value = '';
+    document.getElementById('createMemberEmail').value = '';
+    document.getElementById('memberEmailsContainer').innerHTML = '';
+    createCollabModal.show();
+};
+
+// add member email to create list
+function addMemberEmailToCreate() {
+    const emailInput = document.getElementById('createMemberEmail');
+    const email = emailInput.value.trim();
+    if(email && email.includes('@')) {
+        if(!memberEmails.includes(email)) {
+            memberEmails.push(email);
+            renderMemberEmails();
+        }
+        emailInput.value = '';
+    }
+}
+
+document.getElementById('addMemberEmailBtn').onclick = addMemberEmailToCreate;
+document.getElementById('createMemberEmail').onkeypress = (e) => {
+    if(e.key === 'Enter') {
+        e.preventDefault();
+        addMemberEmailToCreate();
+    }
+};
+
+// render member emails in create modal
+function renderMemberEmails() {
+    const container = document.getElementById('memberEmailsContainer');
+    container.innerHTML = '';
+    memberEmails.forEach((email, index) => {
+        const badge = document.createElement('span');
+        badge.className = 'member-badge';
+        badge.innerHTML = `
+            ${email} 
+            <button class="btn btn-sm btn-link p-0 ms-1 text-danger" style="text-decoration: none;">
+                <i class="bi bi-x"></i>
+            </button>
+        `;
+        badge.querySelector('button').onclick = () => {
+            memberEmails.splice(index, 1);
+            renderMemberEmails();
+        };
+        container.appendChild(badge);
+    });
+}
+
+// create Collaborative List
+document.getElementById('confirmCreateCollabBtn').onclick = async () => {
+    const listName = document.getElementById('createCollabName').value.trim();
+    if(!listName) return alert("Please enter a list name");
+    
+    const members = { [currentUser.uid]: true };
+    
+    // convert emails to UIDs
+    for(const email of memberEmails) {
+        const uid = await getUidFromEmail(email);
+        if(uid) {
+            members[uid] = true;
+        } else {
+            alert(`User with email ${email} not found`);
+        }
+    }
+    
+    const collabRef = push(ref(db, 'collabs'));
+    set(collabRef, {
+        name: listName,
+        members: members,
+        createdOn: Date.now()
+    }).then(() => {
+        createCollabModal.hide();
+        loadCollabs(currentUser.uid);
+    });
+};
+
+// load Collaborative Lists
+function loadCollabs(uid) {
+    collabListOptions.innerHTML = '';
+    const collabRef = ref(db, 'collabs');
+    onValue(collabRef, snapshot => {
+        collabListOptions.innerHTML = '';
+        snapshot.forEach(childSnapshot => {
+            const list = childSnapshot.val();
+            if(list.members && list.members[uid]) {
+                const div = document.createElement('div');
+                div.className = 'card p-3 mb-2';
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="flex-grow-1 collab-list-name" style="cursor: pointer;">
+                            <i class="bi bi-folder me-2"></i>${list.name}
+                        </span>
+                        <div class="d-flex gap-2">
+                            <button class="collab-action-btn text-primary edit-collab" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="collab-action-btn text-danger delete-collab" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="collab-action-btn text-success open-collab" title="Open">
+                                <i class="bi bi-arrow-right-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                div.querySelector('.collab-list-name').onclick = () => {
+                    currentMode = 'collaborative';
+                    currentCollab = childSnapshot.key;
+                    updateModeBadge();
+                    loadTasks(currentUser.uid);
+                    modeSwitcherModal.hide();
+                };
+                
+                div.querySelector('.open-collab').onclick = () => {
+                    currentMode = 'collaborative';
+                    currentCollab = childSnapshot.key;
+                    updateModeBadge();
+                    loadTasks(currentUser.uid);
+                    modeSwitcherModal.hide();
+                };
+                
+                // edit list
+                div.querySelector('.edit-collab').onclick = (e) => {
+                    e.stopPropagation();
+                    openEditCollabModal(childSnapshot.key, list);
+                };
+                
+                // delete list
+                div.querySelector('.delete-collab').onclick = (e) => {
+                    e.stopPropagation();
+                    openDeleteCollabModal(childSnapshot.key, list);
+                };
+                
+                collabListOptions.appendChild(div);
+            }
+        });
+    });
+}
+
+// open edit collaborative list modal
+function openEditCollabModal(collabId, listData) {
+    currentEditingCollab = collabId;
+    document.getElementById('editCollabName').value = listData.name;
+    
+    // render current members
+    const membersList = document.getElementById('editMembersList');
+    membersList.innerHTML = '';
+    
+    if(listData.members) {
+        Object.keys(listData.members).forEach(uid => {
+            const email = userEmailCache[uid] || uid;
+            const badge = document.createElement('span');
+            badge.className = 'member-badge';
+            badge.innerHTML = `
+                ${email}
+                ${uid !== currentUser.uid ? `<button class="btn btn-sm btn-link p-0 ms-1 text-danger" style="text-decoration: none;">
+                    <i class="bi bi-x"></i>
+                </button>` : ''}
+            `;
+            
+            if(uid !== currentUser.uid) {
+                badge.querySelector('button').onclick = () => {
+                    removeMemberFromCollab(collabId, uid);
+                };
+            }
+            
+            membersList.appendChild(badge);
+        });
+    }
+    
+    editCollabModal.show();
+}
+
+// add member to collaborative list
+document.getElementById('editAddMemberBtn').onclick = async () => {
+    const email = document.getElementById('editAddMemberEmail').value.trim();
+    if(!email || !email.includes('@')) return alert("Please enter a valid email");
+    
+    const uid = await getUidFromEmail(email);
+    if(!uid) return alert("User not found");
+    
+    const collabRef = ref(db, `collabs/${currentEditingCollab}/members/${uid}`);
+    set(collabRef, true).then(() => {
+        document.getElementById('editAddMemberEmail').value = '';
+        get(ref(db, `collabs/${currentEditingCollab}`)).then(snapshot => {
+            openEditCollabModal(currentEditingCollab, snapshot.val());
+        });
+    });
+};
+
+// remove member from collaborative list
+function removeMemberFromCollab(collabId, uid) {
+    if(confirm("Remove this member from the list?")) {
+        remove(ref(db, `collabs/${collabId}/members/${uid}`)).then(() => {
+            get(ref(db, `collabs/${collabId}`)).then(snapshot => {
+                openEditCollabModal(collabId, snapshot.val());
+            });
+        });
+    }
+}
+
+// save collaborative list edits
+document.getElementById('confirmEditCollabBtn').onclick = () => {
+    const newName = document.getElementById('editCollabName').value.trim();
+    if(!newName) return alert("Please enter a list name");
+    
+    update(ref(db, `collabs/${currentEditingCollab}`), {
+        name: newName
+    }).then(() => {
+        editCollabModal.hide();
+        loadCollabs(currentUser.uid);
+    });
+};
+
+// open delete collaborative list modal
+function openDeleteCollabModal(collabId, listData) {
+    document.getElementById('deleteCollabName').textContent = listData.name;
+    currentEditingCollab = collabId;
+    deleteCollabModal.show();
+}
+
+// confirm delete collaborative list
+document.getElementById('confirmDeleteCollabBtn').onclick = () => {
+    // delete the collaborative list
+    remove(ref(db, `collabs/${currentEditingCollab}`)).then(() => {
+        // delete all tasks in the collaborative list
+        remove(ref(db, `collabTasks/${currentEditingCollab}`));
+        deleteCollabModal.hide();
+        
+        // if currently in this collab, switch to personal
+        if(currentCollab === currentEditingCollab) {
+            currentMode = 'personal';
+            currentCollab = null;
+            updateModeBadge();
+            loadTasks(currentUser.uid);
+        }
+        
+        loadCollabs(currentUser.uid);
+    });
+};
+
+// add task
+function addData() {
+    const taskRef = currentCollab 
+        ? push(ref(db, "collabTasks/" + currentCollab)) 
+        : push(ref(db, "tasks/" + currentUser.uid));
+    set(taskRef, {
+        name: taskName.value,
+        dueDate: taskDueDate.value,
+        dueTime: taskDueTime.value,
+        priority: taskPriority.value,
+        isDone: false,
+        addedOn: Date.now()
+    }).then(() => document.getElementById('task-form').reset())
+      .catch(err => console.error("Add failed:", err));
+}
+
+// load tasks with proper listener cleanup
+function loadTasks(uid) {
+    tasksArray = [];
+    indvTasks.innerHTML = '';
+    
+    // clean up previous listeners
+    const oldRef = currentCollab 
+        ? ref(db, "collabTasks/" + currentCollab)
+        : ref(db, "tasks/" + uid);
+    off(oldRef);
+    
+    const tasksRef = currentCollab 
+        ? ref(db, "collabTasks/" + currentCollab)
+        : ref(db, "tasks/" + uid);
+    
+    onValue(tasksRef, snapshot => {
+        tasksArray = [];
+        snapshot.forEach(childSnapshot => {
+            const task = childSnapshot.val();
+            tasksArray.push({ ...task, id: childSnapshot.key });
+        });
+        renderTasks(tasksArray);
+    });
+}
+
+// render tasks
+function renderTasks(tasks) {
+    indvTasks.innerHTML = '';
+    tasks.forEach(task => {
+        const taskDiv = document.createElement('div');
+        taskDiv.className = `card task-card p-3 mb-3 priority-${task.priority}`;
+        const escapedName = document.createElement('div').appendChild(document.createTextNode(task.name)).parentNode.innerHTML;
+        taskDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="task-info d-flex align-items-start flex-grow-1">
+                    <input type="checkbox" class="markasDone me-2 mt-1" ${task.isDone ? 'checked' : ''}>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1 ${task.isDone ? 'completed' : ''}">${escapedName}</h5>
+                        <p class="mb-0 ${task.isDone ? 'completed' : ''}">Due: ${formatDate(task.dueDate)} ${formatTime(task.dueTime)}</p>
+                    </div>
+                </div>
+                <div class="task-actions d-flex gap-2">
+                    <button class="icon-btn edit" title="Edit"><i class="bi bi-pencil"></i></button>
+                    <button class="icon-btn delete" title="Delete"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            <div class="task-card-footer"><div class="date-added">Added: ${formatDateAdded(task.addedOn)}</div></div>
+        `;
+        // checkbox change -> update isDone
+        taskDiv.querySelector('.markasDone').onchange = e => {
+            const checked = e.target.checked;
+            const path = currentCollab ? `collabTasks/${currentCollab}/${task.id}` : `tasks/${currentUser.uid}/${task.id}`;
+            update(ref(db, path), { isDone: checked });
+        };
+        taskDiv.querySelector('.edit').onclick = () => editTask(task, taskDiv);
+        taskDiv.querySelector('.delete').onclick = () => showDeleteConfirmation(task, taskDiv);
+        indvTasks.appendChild(taskDiv);
+    });
+}
+
+// show delete confirmation modal
+function showDeleteConfirmation(task, taskDiv) {
+    document.getElementById('deleteTaskName').textContent = task.name;
+    pendingDelete = { task, taskDiv };
+    deleteConfirmModal.show();
+}
+
+// confirm delete button
+document.getElementById('confirmDeleteBtn').onclick = () => {
+    if(!pendingDelete) return;
+    
+    const { task, taskDiv } = pendingDelete;
+    const path = currentCollab ? `collabTasks/${currentCollab}/${task.id}` : `tasks/${currentUser.uid}/${task.id}`;
+    
+    // store for undo
+    const deletedTask = { ...task, path };
+    
+    remove(ref(db, path)).then(() => {
+        taskDiv.remove();
+        deleteConfirmModal.hide();
+        
+        // show undo toast
+        undoToast.show();
+        
+        // set up undo with timeout
+        clearTimeout(deleteTimeout);
+        deleteTimeout = setTimeout(() => {
+            pendingDelete = null;
+            window.lastDeletedTask = null;
+        }, 5000);
+        
+        // store deleted task for undo
+        window.lastDeletedTask = deletedTask;
+    }).catch(err => console.error(err));
+};
+
+// undo delete
+document.getElementById('undoDeleteBtn').onclick = () => {
+    if(!window.lastDeletedTask) return;
+    
+    const task = window.lastDeletedTask;
+    const taskData = { ...task };
+    delete taskData.path;
+    delete taskData.id;
+    
+    // restore to the same DB path (note: set on the original path key)
+    set(ref(db, window.lastDeletedTask.path), taskData).then(() => {
+        undoToast.hide();
+        window.lastDeletedTask = null;
+        clearTimeout(deleteTimeout);
+    }).catch(err => console.error('Undo failed', err));
+};
+
+// edit task
+function editTask(task, taskDiv) {
+    const infoDiv = taskDiv.querySelector('.task-info div.flex-grow-1');
+    const actionsDiv = taskDiv.querySelector('.task-actions');
+    infoDiv.innerHTML = `
+        <input type="text" class="form-control mb-1" value="${task.name}">
+        <input type="date" class="form-control mb-1" value="${task.dueDate}">
+        <input type="time" class="form-control mb-1" value="${task.dueTime}">
+        <select class="form-select mb-1">
+            <option value="low" ${task.priority==='low'?'selected':''}>Low</option>
+            <option value="medium" ${task.priority==='medium'?'selected':''}>Medium</option>
+            <option value="high" ${task.priority==='high'?'selected':''}>High</option>
+        </select>
+    `;
+    actionsDiv.innerHTML = `
+        <button class="save-btn btn btn-sm btn-success me-2">Save</button>
+        <button class="cancel-btn btn btn-sm btn-secondary">Cancel</button>
+    `;
+    actionsDiv.querySelector('.save-btn').onclick = () => {
+        const updated = {
+            name: infoDiv.querySelector('input[type="text"]').value,
+            dueDate: infoDiv.querySelector('input[type="date"]').value,
+            dueTime: infoDiv.querySelector('input[type="time"]').value,
+            priority: infoDiv.querySelector('select').value,
+            isDone: task.isDone,
+            addedOn: task.addedOn
+        };
+        const path = currentCollab ? `collabTasks/${currentCollab}/${task.id}` : `tasks/${currentUser.uid}/${task.id}`;
+        update(ref(db, path), updated);
+    };
+    actionsDiv.querySelector('.cancel-btn').onclick = () => renderTasks(tasksArray);
+}
+
+// logout
+document.getElementById('logoutBtn').onclick = () => {
+    signOut(auth).then(() => window.location.href = "index.html");
+};
+
+// form submission
+document.getElementById('task-form').onsubmit = e => { e.preventDefault(); addData(); };
+
+// sorting
+document.getElementById('sortDateAdded').onclick = () => { tasksArray.sort((a,b)=>a.addedOn-b.addedOn); renderTasks(tasksArray); };
+document.getElementById('sortDueDate').onclick = () => { tasksArray.sort((a,b)=>new Date(a.dueDate+" "+a.dueTime)-new Date(b.dueDate+" "+b.dueTime)); renderTasks(tasksArray); };
+document.getElementById('sortPriority').onclick = () => { const map={low:3,medium:2,high:1}; tasksArray.sort((a,b)=>map[a.priority]-map[b.priority]); renderTasks(tasksArray); };
+
+document.querySelectorAll(".sort-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+
+        // remove active class from all buttons
+        document.querySelectorAll(".sort-btn").forEach(b => 
+            b.classList.remove("sort-btn-active")
+        );
+
+        // add active class to clicked button
+        this.classList.add("sort-btn-active");
+    });
+});
+
+// blur date/time inputs on change to close native pickers
+const blurOnChange = el => {
+    if(!el) return;
+    el.addEventListener('change', () => {
+        // small timeout to allow native picker to finish before blur
+        setTimeout(() => {
+            try { el.blur(); } catch(e){}
+        }, 50);
+    });
+};
+blurOnChange(taskDueDate);
+blurOnChange(taskDueTime);
+// (Also blur create/edit member email inputs on enter)
+document.getElementById('createMemberEmail').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') {
+        e.preventDefault();
+        e.target.blur();
+    }
+});
+document.getElementById('editAddMemberEmail').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') {
+        e.preventDefault();
+        e.target.blur();
+    }
+});
+</script>
+</body>
+</html>
