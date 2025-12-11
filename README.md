@@ -4,7 +4,7 @@ What TO-DO is a web application in partial fulfillment of requirements for CMSC 
 ## Description
 What TO-DO is one of many web to-do lists scattered all over the internet. It has basic functionalities such as adding a task, editing, and deleting said task. Users can add a task by typing in its name, due date, due time, and priority. These details can be edited later on should the need arises. Aside from its basic features, users can easily sort through their tasks with the sorting buttons situated on the right side of the screen. Overall, it provides everything a user may need when it comes to a to-do list.
 
-Currently, it contains a login/signup and profile page that is not yet connected to the actual web application.
+Users can now register and log in with their own accounts.
 
 In this final version, What TO-DO now has additional features such as a collaborative mode where users can make tasks along with other with other registered users. Users can create a collaborative list and invite all their friends with it. This collaborative list will then reflect on the other users. Additional fixes and improvement has also been made such as the UI, the register and login, and much more.
 
